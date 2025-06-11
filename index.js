@@ -3,7 +3,9 @@ const initModels = require('./models/init-models');
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 const { sequelize } = require('./models');
+const NodeCache = require( "node-cache" );
 
+const myCache = new NodeCache();
 const app = express();
 const models = initModels(sequelize);
 
@@ -14,92 +16,56 @@ const SECRET = "coffeeCakes"
 app.use(express.static('public'));
 app.use(express.json());
 
+async function imageGet(req, res){
+
+    if (myCache.has("images")) {
+        //console.log("cached images");
+        res.json(myCache.get("images"));
+    } else {
+        try {
+            const pics = await models.pics.findAll();
+            const captionPics = await models.captions.findAll();
+
+            const captionArray = [];
+            for  (var i=0; i < captionPics.length; i++){
+                const picsInfo = await models.pics.findOne({where: captionPics[i].pics_id});
+                const userInfo = await models.users.findOne({where: captionPics[i].user_id});
+                const captionInfo = {
+                    pics_id: picsInfo.id,
+                    pics_name: picsInfo.name,
+                    username: userInfo.username,
+                    caption: captionPics[i].caption,
+                    createdAt: captionPics[i].createdAt,
+                    pics_data: picsInfo.image,
+                }
+                captionArray.push(captionInfo);
+            }
+
+            const jsonArray = [pics, captionArray]
+            myCache.set("images", jsonArray);
+
+            //console.log("not cached");
+
+            res.json(jsonArray);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({err: "something broke"});
+        }  
+    }
+}
+
+
 
 app.get("/", async (req, res) =>{
-    try {
-        const pics = await models.pics.findAll();
-        const captionPics = await models.captions.findAll();
-
-        const captionArray = [];
-        for  (var i=0; i < captionPics.length; i++){
-            console.log(captionPics[i]);
-            const picsInfo = await models.pics.findOne({where: captionPics[i].pics_id});
-            const userInfo = await models.users.findOne({where: captionPics[i].user_id});
-            const captionInfo = {
-                pics_id: picsInfo.id,
-                pics_name: picsInfo.name,
-                username: userInfo.username,
-                caption: captionPics[i].caption,
-                createdAt: captionPics[i].createdAt,
-                pics_data: picsInfo.image,
-            }
-            captionArray.push(captionInfo);
-        }
-
-        const jsonArray = [pics, captionArray]
-        return res.json(jsonArray);
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({err: "something broke"});
-    }
+    imageGet(req, res)
 });
 
 app.get("/index", async (req, res) =>{
-    try {
-        const pics = await models.pics.findAll();
-        const captionPics = await models.captions.findAll();
-
-        const captionArray = [];
-        for  (var i=0; i < captionPics.length; i++){
-            console.log(captionPics[i]);
-            const picsInfo = await models.pics.findOne({where: captionPics[i].pics_id});
-            const userInfo = await models.users.findOne({where: captionPics[i].user_id});
-            const captionInfo = {
-                pics_id: picsInfo.id,
-                pics_name: picsInfo.name,
-                username: userInfo.username,
-                caption: captionPics[i].caption,
-                createdAt: captionPics[i].createdAt,
-                pics_data: picsInfo.image,
-            }
-            captionArray.push(captionInfo);
-        }
-
-        const jsonArray = [pics, captionArray]
-        return res.json(jsonArray);
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({err: "something broke"});
-    }
+    imageGet(req, res)
 });
 
 app.get("/images", async (req, res) =>{
-    try {
-        const pics = await models.pics.findAll();
-        const captionPics = await models.captions.findAll();
-
-        const captionArray = [];
-        for  (var i=0; i < captionPics.length; i++){
-            console.log(captionPics[i]);
-            const picsInfo = await models.pics.findOne({where: captionPics[i].pics_id});
-            const userInfo = await models.users.findOne({where: captionPics[i].user_id});
-            const captionInfo = {
-                pics_id: picsInfo.id,
-                pics_name: picsInfo.name,
-                username: userInfo.username,
-                caption: captionPics[i].caption,
-                createdAt: captionPics[i].createdAt,
-                pics_data: picsInfo.image,
-            }
-            captionArray.push(captionInfo);
-        }
-
-        const jsonArray = [pics, captionArray]
-        return res.json(jsonArray);
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({err: "something broke"});
-    }
+    imageGet(req, res)
 });
 
 
