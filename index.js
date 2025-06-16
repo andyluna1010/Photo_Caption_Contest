@@ -19,7 +19,7 @@ app.use(express.json());
 async function imageGet(req, res){
 
     if (myCache.has("images")) {
-        //console.log("cached images");
+        console.log("cached images");
         res.json(myCache.get("images"));
     } else {
         try {
@@ -44,7 +44,7 @@ async function imageGet(req, res){
             const jsonArray = [pics, captionArray]
             myCache.set("images", jsonArray);
 
-            //console.log("not cached");
+            console.log("not cached");
 
             res.json(jsonArray);
         } catch (error) {
@@ -54,37 +54,7 @@ async function imageGet(req, res){
     }
 }
 
-
-
-app.get("/", async (req, res) =>{
-    imageGet(req, res)
-});
-
-app.get("/index", async (req, res) =>{
-    imageGet(req, res)
-});
-
-app.get("/images", async (req, res) =>{
-    imageGet(req, res)
-});
-
-
-
-app.get("/image/:name", async (req, res) =>{
-    const name = req.params.name;
-    try {
-        const pics = await models.pics.findOne({
-            where: {name},
-        });
-        return res.json(pics);
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({err: "something broke"});
-    }
-});
-
-app.post("/image/:name",
-    async (req, res,next) =>{
+async function authorizationMiddleware(req, res, next){
     try {
         const token = req.headers['authorization'].split(" ")[1];
         const decoded = jwt.verify(token, SECRET);
@@ -107,7 +77,35 @@ app.post("/image/:name",
     } catch (error) {
        return res.status(401).json({"msg":"Could not Authenticate"});
     }
-},
+}
+
+app.get("/", async (req, res) =>{
+    imageGet(req, res)
+});
+
+app.get("/index", async (req, res) =>{
+    imageGet(req, res)
+});
+
+app.get("/images", async (req, res) =>{
+    imageGet(req, res)
+});
+
+app.get("/image/:name", async (req, res) =>{
+    const name = req.params.name;
+    try {
+        const pics = await models.pics.findOne({
+            where: {name},
+        });
+        return res.json(pics);
+    } catch (error) {
+        console.log(error);
+        return res.status(404).json({err: "image not found"});
+    }
+});
+
+app.post("/image/:name",
+authorizationMiddleware,
 async (req, res, next)=>{
         try {
             const userCheck = await models.users.findOne({

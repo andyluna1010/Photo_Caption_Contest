@@ -1,0 +1,280 @@
+openapi: 3.0.3
+info:
+  title: Photo caption contest - Backend 1.0
+  description: |-
+    The back end code for a Photo caption contest website.  It got pages for display all the images, just one image, registration of a new account, login page for user, and a post page for logged in user to post image captions.  There are changes to be made once a frontend is build.  Things like; making sure that the page being sent is part of the frontend and not just basic json page, converting json buffer to images, and making it so the post caption page is grabing the JWT info and setting the username to the body so that it can be used by the backend to create a correct caption connected to that user.  
+  version: 1.0.11
+tags:
+  - name: images
+    description: Everything about your images and captions
+  - name: user
+    description: Operations about user
+paths:
+  /image/{name}:
+    post:
+      tags:
+        - images
+      summary: Add a new image caption to the image list
+      description: Add a new caption to the image list
+      operationId: name
+      parameters:
+        - name: name
+          in: path
+          description: name of image to return
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Create a new caption in the image list
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/caption'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/caption' 
+        '400':
+          description: Password Incorrect
+        '401':
+          description: Could not Authenticate
+        '404':
+          description: not found
+        '500':
+          description: something broke + error
+      security:
+        - user_auth:
+            - write:caption
+  /:
+    get:
+      tags:
+        - images
+      summary: Gets all images and captions
+      description: Gets all images and captions as json objects
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                   - $ref: '#/components/schemas/image'
+                   - $ref: '#/components/schemas/caption'
+        '500':
+          description: something broke
+  /index:
+    get:
+      tags:
+        - images
+      summary: Gets all images and captions
+      description: Gets all images and captions as json objects
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                   - $ref: '#/components/schemas/image'
+                   - $ref: '#/components/schemas/caption'
+        '500':
+          description: something broke
+  /images:
+    get:
+      tags:
+        - images
+      summary: Gets all images and captions
+      description: Gets all images and captions as json objects
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                   - $ref: '#/components/schemas/image'
+                   - $ref: '#/components/schemas/caption'
+        '500':
+          description: something broke
+  /images/{name}:
+    get:
+      tags: 
+        - images
+      summary: Find a image by name
+      description: returns a single image
+      operationId: imageName
+      parameters:
+        - name: name
+          in: path
+          description: Name of image return
+          required: true
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/image'          
+        '404':
+          description: image not found  
+  /registration:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: Creates a new user
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+      responses:
+        default:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+    get:
+      tags: 
+        - user
+      summary: get user create page
+      description: gets the page that allow one to create an user
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "username ______ password ______"
+  /login:
+    get:
+      tags: 
+        - user
+      summary: get user create page
+      description: gets the page that allow one to create an user
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "username ______ password ______"
+    post: 
+      tags:
+       - user
+      summary: checks if login info is correct
+      description: send body info to the server to check if the user is in the DB and it matches the password
+      responses: 
+        "200":
+          description: user is now logged in
+        "400":
+          description: password is incorrect
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Password is incorrect"
+        "404":
+          description: user not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "user is not found"
+        "500":
+          description: something broke
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "something broke"
+      
+components:
+  schemas:
+    image:
+      type: object
+      properties:
+        image:
+          type: array
+          format: array
+          items: 
+            type: integer
+          example: [205,255,230,0,1,2,5,]
+        name:
+          type: string
+          format: sleepy
+    user:
+      type: object
+      properties:
+        username:
+          type: string
+          example: fehguy
+        password:
+          type: string
+          example: $2a$09$TeqHGCsyX/4F.nxFIc.k9uee4qGROPQHun6kjq1qkXvcu/ZhRUOTu
+    caption:
+      type: object
+      properties:
+        pics_id:
+          type: integer
+          example: 9
+        pics_name:
+          type: string
+          example: sleepy
+        username:
+          type: string
+          example: who8904
+        caption:
+          type: string
+          example: 'need me some coffee'
+        createdAt:
+          type: string
+          example: 2025-06-11 13:05:50.254-07
+        image:
+          type: array
+          format: array
+          items: 
+            type: integer
+          example: [205,255,230,0,1,2,5,]
+  requestBodies:
+    Images:
+      description: Image object that needs to be added to the list
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/image'
+    Captions:
+      description: Caption object that needs to be added to the list
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/caption'        
+    UserArray:
+      description: List of user object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/user'
+  securitySchemes:
+    user_auth:
+      type: http
+      scheme: bearer
